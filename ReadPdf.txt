@@ -1,0 +1,144 @@
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.StringTokenizer;
+
+import com.itextpdf.text.*;
+import com.itextpdf.text.pdf.*;
+import com.itextpdf.text.pdf.parser.PdfTextExtractor;
+
+public class ReadPdf {
+
+	static int n = 100;
+	public static String[] constantArray = new String[n];
+
+	/**
+	 * @param args
+	 */
+	public static void main(String[] args) {
+
+		String finalString = "";
+
+		// Notice the offset by 2 to numbering in document
+		for (int i = 320; i < 322; i++) {
+			try {
+				PdfReader reader = new PdfReader("Maharashtra_2009.pdf");
+				int n = reader.getNumberOfPages();
+				String page = PdfTextExtractor.getTextFromPage(reader, i);
+
+				// String Tokenizer to split String up into tokens
+
+				StringTokenizer Tk = new StringTokenizer(page, "\n");
+
+				// Throw away 1st 7 tokens of page
+				Tk.nextToken();
+				Tk.nextToken();
+				Tk.nextToken();
+				Tk.nextToken();
+				Tk.nextToken();
+				Tk.nextToken();
+				Tk.nextToken();
+
+				while (Tk.hasMoreTokens()) {
+
+					// Want to break up each line into tokens by spaces
+					StringTokenizer st = new StringTokenizer(Tk.nextToken(),
+							" ");
+
+					// If 4 or fewer tokens, skip that line
+					if (st.countTokens() < 5)
+						continue;
+
+					// If Header line, then skip
+					String firstToken = st.nextToken();
+					if (firstToken.contains("Constituency"))
+					{
+						finalString += "@@@" + firstToken + "@@@";
+						finalString += "@@@" + st.nextToken() + "@@@";
+						finalString += "@@@" + st.nextToken() + "@@@";
+						finalString += "@@@" + st.nextToken() + "@@@";
+						finalString += "@@@" + st.nextToken() + "@@@";
+						finalString += "@@@" + st.nextToken() + "@@@";
+						finalString += "@@@" + st.nextToken() + "@@@";
+					}
+
+					int numbersCount = 0;
+
+					if (isNumeric(firstToken)) {
+						finalString += "$$" + firstToken + "$$     ";
+						numbersCount++;
+					}
+
+					// Go through each token in line2
+					while (st.hasMoreTokens()) {
+						
+						String currentToken = st.nextToken();
+
+						if (isNumeric(currentToken) && numbersCount == 1) {
+							finalString += "$*" + currentToken + "$*     ";
+							numbersCount++;
+							continue;
+						}
+
+						if (isNumeric(currentToken) && numbersCount == 2) {
+							finalString += "@@" + currentToken + "@@     ";
+							numbersCount++;
+							continue;
+						}
+
+						if (isNumeric(currentToken) && numbersCount == 3) {
+							finalString += "*&" + currentToken + "*&     ";
+							numbersCount++;
+							continue;
+						}
+
+						if (isNumeric(currentToken) && numbersCount == 4) {
+							finalString += "#&" + currentToken + "#&     ";
+							numbersCount++;
+							continue;
+						}
+
+						if (isNumeric(currentToken) && numbersCount == 5) {
+							finalString += "!*" + currentToken + "!*     ";
+							numbersCount++;
+							continue;
+						}
+
+						if (isNumeric(currentToken) && numbersCount == 6) {
+							finalString += "!^" + currentToken + "!^     ";
+							numbersCount++;
+							continue;
+						}
+
+						if (currentToken == "M") {
+							finalString += "%%" + "M" + "%%     ";
+							continue;
+						}
+
+						if (currentToken == "F") {
+							finalString += "%%" + "F" + "%%     ";
+							continue;
+						}
+
+						if (Arrays.asList(constantArray).contains(currentToken)) {
+							finalString += "!!" + currentToken + "!!     ";
+							continue;
+						}
+
+						finalString += "##" + currentToken + "##    ";
+					}
+				}
+
+				System.out.println( finalString );				
+				
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	public static boolean isNumeric(String str) {
+		return str.matches("-?\\d+(\\.\\d+)?"); // match a number with optional
+												// '-' and decimal.
+	}
+}
